@@ -4,6 +4,15 @@
  */
 #include "jay_internal.h"
 
+Token tokens[MAX_TOKENS];
+size_t token_count, current;
+Variable variables[MAX_VARS];
+size_t variable_count;
+const char *source_name = "<input>";
+int errors;
+int loop_depth;
+int flow_state;
+
 bool run_source(const char *src, const char *name)
 {
     source_name = name;
