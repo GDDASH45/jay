@@ -6,7 +6,6 @@ LDLIBS += -lm
 TARGET := build/jay
 SOURCES := $(shell find src jaystdlib -type f -name '*.c' -print)
 OBJECTS := $(patsubst %.c,build/%.o,$(SOURCES))
-MODULES := $(wildcard modules/*.jmd)
 
 .PHONY: all clean install test
 
