@@ -10,7 +10,7 @@
 #include <string.h>
 #include <sys/types.h>
 
-#define JAY_VERSION "0.5.0"
+#define JAY_VERSION "0.9.0"
 #define MAX_TOKENS 8192
 #define MAX_VARS 2048
 #define MAX_TEXT 1024
@@ -142,6 +142,10 @@ void execute_range(size_t start, size_t end);
 void statement(void);
 char *expand_imports(const char *source, const char *origin);
 bool run_source(const char *src, const char *name);
+bool bytecode_write(const char *path, const Token *items, size_t count);
+bool bytecode_read(const char *path, Token *items, size_t capacity, size_t *count);
+int run_bytecode(const char *path);
+int compile_file(const char *source_path, const char *bytecode_path);
 int run_file(const char *path);
 void repl(void);
 void usage(const char *argv0);
