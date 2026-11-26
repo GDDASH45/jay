@@ -24,13 +24,15 @@ Print version or usage information with `jay --version` and `jay --help`.
 - `volatile` declaration qualifier
 - Optional semicolons and newline-separated statements
 - Arithmetic, comparisons, boolean operators, and string concatenation
-- Variable assignment and the `print(...)` built-in
+- Variable assignment and standard-library I/O: `print()`, `putchar()`, `puts()`, and `putnum()`
 - `if` / `else` conditional blocks
 - `while` loops
 - `break` and `continue` inside loops
 - Comments beginning with `#`
 
 Run the test suite with `make test`.
+
+The native standard library is maintained separately in [`jaystdlib/`](jaystdlib/README.md).
 
 See [The Ultimate Jay Manual](TheUltimateJayManual.md) for language details.
 
