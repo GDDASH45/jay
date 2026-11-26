@@ -16,7 +16,7 @@ Function *find_function(const char *name)
 
 bool define_function(const char *name, Parameter *parameters,
                      size_t parameter_count, size_t body_start,
-                     size_t body_end, int line)
+                     size_t body_end, ValueType return_type, int line)
 {
     if (find_function(name)) {
         fail_at(line, "function is already declared");
@@ -43,6 +43,7 @@ bool define_function(const char *name, Parameter *parameters,
     function->body_start = body_start;
     function->body_end = body_end;
     function->line = line;
+    function->return_type = return_type;
     snprintf(function->module_name, sizeof(function->module_name), "%s", active_module);
 
     return true;
@@ -128,8 +129,16 @@ Value call_function(const char *name, Value *arguments,
 
     Value result = make_void();
 
-    if (valid && flow_state == 3)
-        result = clone_value(return_value);
+    if (valid && flow_state == 3) {
+        if (return_value.type == V_VOID || function->return_type == V_VOID) {
+            if (return_value.type != function->return_type)
+                fail_at(line, "function return value does not match declared return type");
+        } else if (!convert_value(return_value, function->return_type, &result)) {
+            fail_at(line, "function returned a value with the wrong type");
+        }
+    } else if (valid && function->return_type != V_VOID) {
+        fail_at(line, "non-void function did not return a value");
+    }
 
     for (size_t i = saved_variable_count; i < variable_count; i++)
         free_value(&variables[i].value);
