@@ -1,0 +1,28 @@
+int square(int value) {
+    return value * value
+}
+
+int cube(int value) {
+    return value * value * value
+}
+
+int absolute(int value) {
+    if (value < 0) {
+        return 0 - value
+    }
+    return value
+}
+
+int max(int a, int b) {
+    if (a > b) {
+        return a
+    }
+    return b
+}
+
+int min(int a, int b) {
+    if (a < b) {
+        return a
+    }
+    return b
+}
