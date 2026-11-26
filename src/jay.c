@@ -777,6 +777,8 @@ static bool run_source(const char *src, const char *name)
     source_name = name;
     errors = 0;
     current = 0;
+    loop_depth = 0;
+    flow_state = 0;
     if (!lex(src)) return false;
     while (!check(T_EOF)) {
         size_t before = current;
