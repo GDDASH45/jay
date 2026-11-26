@@ -42,7 +42,7 @@ clean:
 .PHONY: debpkg
 
 PACKAGE := jay
-VERSION := 0.8.0
+VERSION := 0.9.0
 ARCH := $(shell dpkg --print-architecture)
 DEB_DIR := ../debian
 
