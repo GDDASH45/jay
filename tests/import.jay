@@ -1,0 +1,2 @@
+import math
+print("module says:", module_value())
