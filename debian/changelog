@@ -1,153 +1,35 @@
 jay (0.9.0-1) unstable; urgency=medium
 
-  * Add portable Jay bytecode compilation and execution.
-  * Add the versioned .jbc bytecode container and input validation.
-  * Bump Jay to 0.9.0.
+  * Add portable token-bytecode compilation and execution.
+  * Add a versioned .jbc bytecode container with input validation.
+  * Add bytecode compilation and execution tests.
 
  -- GDDASH45 <216096093+GDDASH45@users.noreply.github.com>  Thu, 26 Nov 2026 23:00:00 +0000
 
-# The Ultimate Jay Manual
+jay (0.8.0-1) unstable; urgency=medium
 
-# Types
+  * Add module unloading with umport.
 
-## Built-in
+ -- GDDASH45 <216096093+GDDASH45@users.noreply.github.com>  Thu, 26 Nov 2026 22:30:00 +0000
 
-| Type | Description | Example |
-|---|---|---|
-| `int` | Integer | `int age = 18` |
-| `float` | Floating-point number | `float pi = 3.14` |
-| `str` | String | `str name = "Jay"` |
-| `bool` | Boolean | `bool enabled = true` |
-| `char` | Character | `char letter = 'J'` |
+jay (0.5.0-1) unstable; urgency=medium
 
-## Volatile
+  * Add source-level module imports using import name.
+  * Add module loading from /lib/jay/modules with JAY_MODULE_DIR override.
+  * Detect duplicate and circular module imports.
 
-The `volatile` keyword declares a variable whose value may change unexpectedly outside the normal execution flow.
+ -- GDDASH45 <216096093+GDDASH45@users.noreply.github.com>  Thu, 26 Nov 2026 22:00:00 +0000
 
-Syntax:
+jay (0.4.0-1) unstable; urgency=medium
 
-```jay
-volatile int status = 0
-```
+  * Add the Jay native standard library.
+  * Add print(), putchar(), puts(), and putnum().
+  * Integrate jaystdlib into the interpreter build.
 
-Examples:
+ -- GDDASH45 <216096093+GDDASH45@users.noreply.github.com>  Thu, 26 Nov 2026 21:00:00 +0000
 
-```jay
-volatile bool running = true
-volatile int hardware_status = 1
-```
+jay (0.2.0-1) unstable; urgency=medium
 
-The interpreter evaluates variable reads directly from its variable table. The qualifier is recorded, but hardware access, external mutation, memory barriers, and thread synchronization are not implemented.
+  * Add Debian binary package support for Jay 0.2.0.
 
-`volatile` can be combined with built-in types:
-
-```jay
-volatile int counter = 0
-volatile float temperature = 25.5
-volatile bool enabled = true
-```
-
-## Variable declarations
-
-Variables can be declared using an explicit type:
-
-```jay
-int age = 18
-str name = "Jay"
-```
-
-Variables can also use type inference:
-
-```jay
-let age = 18
-let name = "Jay"
-```
-
-## Semicolons
-
-Semicolons are optional. Both styles are valid:
-
-```jay
-int x = 10
-int y = 20
-```
-
-```jay
-int x = 10;
-int y = 20;
-```
-
-## Conditions
-
-Use `if` and `else` to select a block. Conditions must evaluate to `bool`:
-
-```jay
-int age = 20
-if (age >= 18) {
-    print("Adult")
-} else {
-    print("Minor")
-}
-```
-
-## Loops
-
-A `while` loop repeats while its condition is `true`:
-
-```jay
-int count = 0
-while (count < 5) {
-    print(count)
-    count = count + 1
-}
-```
-
-Use `break` to leave the nearest loop and `continue` to skip to its next condition check:
-
-```jay
-int count = 0
-while (count < 10) {
-    count = count + 1
-    if (count == 3) {
-        continue
-    }
-    if (count == 7) {
-        break
-    }
-    print(count)
-}
-```
-
-`break` and `continue` are only valid inside a `while` loop. Jay 0.5.0 supports user-defined functions and the native standard-library I/O functions `print()`, `putchar()`, `puts()`, and `putnum()`. Arrays and lexical block scopes are not yet implemented.
-
-## Modules
-
-Jay source files can import modules using the module name:
-
-```jay
-import math
-
-print(module_value())
-```
-
-The import above loads `/lib/jay/modules/math.jmd`. Module names contain letters, digits, and underscores, and must begin with a letter or underscore. The `.jmd` extension is added automatically.
-
-Imports occupy their own line. A trailing semicolon is optional. Module source is expanded at the import location, so declarations and functions become available to the importing program. A module is loaded only once per program; circular imports are reported as errors.
-
-Set the `JAY_MODULE_DIR` environment variable to use a different module directory. This is useful when developing modules without installing them system-wide.
-
-
-### Unloading modules
-
-Use `umport` to unload a previously imported module:
-
-```jay
-import math
-print(square(5))
-umport math
-# Functions and global variables from math are now unavailable.
-import math
-print(square(6))
-```
-
-Unloading removes functions and global variables declared by that module. It does not reverse side effects that already occurred.
+ -- GDDASH45 <216096093+GDDASH45@users.noreply.github.com>  Thu, 26 Nov 2026 19:00:00 +0000
