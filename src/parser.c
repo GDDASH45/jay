@@ -572,7 +572,7 @@ static void parse_function_declaration(int line)
     if (!expect(T_RPAREN, "expected ')' after parameters"))
         return;
 
-    ValueType return_type = V_VOID;
+    ValueType return_type = V_INFER;
     if (match(T_COLON)) {
         if (!match_word("void") && !parse_type(&return_type)) {
             fail_at(line, "expected a return type after ':'");
