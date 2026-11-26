@@ -36,7 +36,7 @@ clean:
 .PHONY: debpkg
 
 PACKAGE := jay
-VERSION := 0.3.0
+VERSION := 0.4.0
 ARCH := $(shell dpkg --print-architecture)
 DEB_DIR := ../debian
 
