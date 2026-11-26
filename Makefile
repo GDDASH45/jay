@@ -21,6 +21,7 @@ build/%.o: %.c
 
 test: $(TARGET)
 	@output=`$(TARGET) tests/control_flow.jay`; expected=`printf '12\ncontrol flow: ok\nelse: ok'`; test "$$output" = "$$expected" || { echo 'Jay tests failed'; exit 1; }
+	@output=`$(TARGET) tests/stdlib.jay`; expected=`printf 'Jay stdlib\nvalue: 7\nJay\n42'`; test "$$output" = "$$expected" || { echo 'Jay standard-library tests failed'; exit 1; }
 
 install: $(TARGET)
 	install -Dm755 $(TARGET) $(DESTDIR)/usr/bin/jay
