@@ -20,6 +20,10 @@ int errors;
 int loop_depth;
 int flow_state;
 
+char active_module[128];
+char module_stack[MAX_SCOPE_DEPTH][128];
+size_t module_stack_depth;
+
 static void clear_variables(void)
 {
     for (size_t i = 0; i < variable_count; i++)
@@ -47,6 +51,8 @@ static void reset_interpreter(void)
 
     loop_depth = 0;
     flow_state = 0;
+    active_module[0] = '\0';
+    module_stack_depth = 0;
 }
 
 bool run_source(const char *src, const char *name)
@@ -56,6 +62,8 @@ bool run_source(const char *src, const char *name)
     current = 0;
     loop_depth = 0;
     flow_state = 0;
+    active_module[0] = '\0';
+    module_stack_depth = 0;
 
     char *expanded = expand_imports(src, name);
     if (!expanded) {
