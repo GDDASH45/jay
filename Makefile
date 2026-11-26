@@ -20,9 +20,7 @@ build/%.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 test: $(TARGET)
-	@mkdir -p build/test-modules
-	@printf 'fn module_value() { return 73 }\\n' > build/test-modules/math.jmd
-	@output=`JAY_MODULE_DIR=build/test-modules $(TARGET) tests/import.jay`; expected=`printf 'module says: 73'`; test "$output" = "$expected" || { echo 'Jay import tests failed'; exit 1; }
+	@output=`JAY_MODULE_DIR=tests/modules $(TARGET) tests/import.jay`; expected=`printf 'module says:73'`; test "$output" = "$expected" || { echo 'Jay import tests failed'; exit 1; }
 	@output=`$(TARGET) tests/control_flow.jay`; expected=`printf '12\ncontrol flow: ok\nelse: ok'`; test "$$output" = "$$expected" || { echo 'Jay tests failed'; exit 1; }
 	@output=`$(TARGET) tests/stdlib.jay`; expected=`printf 'Jay stdlib\nvalue: 7\nJay\n42'`; test "$$output" = "$$expected" || { echo 'Jay standard-library tests failed'; exit 1; }
 
@@ -30,6 +28,7 @@ install: $(TARGET)
 	install -Dm755 $(TARGET) $(DESTDIR)/usr/bin/jay
 	install -Dm644 TheUltimateJayManual.md $(DESTDIR)/usr/share/doc/jay/TheUltimateJayManual.md
 	install -Dm644 jaystdlib/README.md $(DESTDIR)/usr/share/doc/jay/jaystdlib.md
+	install -d $(DESTDIR)/lib/jay/modules
 	install -d $(DESTDIR)/usr/share/doc/jay/examples
 	cp -a examples/. $(DESTDIR)/usr/share/doc/jay/examples/
 
@@ -50,6 +49,7 @@ debpkg: $(TARGET)
 	install -Dm644 LICENSE $(DEB_DIR)/usr/share/doc/jay/copyright
 	install -Dm644 TheUltimateJayManual.md $(DEB_DIR)/usr/share/doc/jay/TheUltimateJayManual.md
 	install -Dm644 jaystdlib/README.md $(DEB_DIR)/usr/share/doc/jay/jaystdlib.md
+	install -d $(DEB_DIR)/lib/jay/modules
 	mkdir -p $(DEB_DIR)/usr/share/doc/jay/examples
 	cp -a examples/. $(DEB_DIR)/usr/share/doc/jay/examples/
 	printf '%s\n' \
