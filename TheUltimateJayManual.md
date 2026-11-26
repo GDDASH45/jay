@@ -29,7 +29,7 @@ volatile bool running = true
 volatile int hardware_status = 1
 ```
 
-A volatile variable must be read from its underlying storage whenever it is accessed, rather than relying on a cached value.
+In Jay 0.1.0, the interpreter evaluates variable reads directly from its variable table, so ordinary variables are not cached either. The qualifier is recorded by the interpreter, but hardware access, external mutation, memory barriers, and thread synchronization are not implemented.
 
 `volatile` can be combined with built-in types:
 
