@@ -33,3 +33,14 @@ Print version or usage information with `jay --version` and `jay --help`.
 Run the test suite with `make test`.
 
 See [The Ultimate Jay Manual](TheUltimateJayManual.md) for language details.
+
+## Debian package
+
+Install the packaging tools and build a binary package:
+
+```sh
+sudo apt install debhelper
+dpkg-buildpackage -us -uc -b
+```
+
+The resulting `jay_0.2.0-1_amd64.deb` is written to the parent directory.
