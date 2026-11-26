@@ -111,3 +111,19 @@ while (count < 10) {
 ```
 
 `break` and `continue` are only valid inside a `while` loop. Jay 0.4.0 supports user-defined functions and the native standard-library I/O functions `print()`, `putchar()`, `puts()`, and `putnum()`. Arrays and lexical block scopes are not yet implemented.
+
+## Modules
+
+Jay source files can import modules using the module name:
+
+```jay
+import math
+
+print(module_value())
+```
+
+The import above loads `/lib/jay/modules/math.jmd`. Module names contain letters, digits, and underscores, and must begin with a letter or underscore. The `.jmd` extension is added automatically.
+
+Imports occupy their own line. A trailing semicolon is optional. Module source is expanded at the import location, so declarations and functions become available to the importing program. A module is loaded only once per program; circular imports are reported as errors.
+
+Set the `JAY_MODULE_DIR` environment variable to use a different module directory. This is useful when developing modules without installing them system-wide.
