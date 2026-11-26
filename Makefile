@@ -6,6 +6,7 @@ LDLIBS += -lm
 TARGET := build/jay
 SOURCES := $(shell find src jaystdlib -type f -name '*.c' -print)
 OBJECTS := $(patsubst %.c,build/%.o,$(SOURCES))
+MODULES := $(wildcard modules/*.jmd)
 
 .PHONY: all clean install test
 
@@ -29,6 +30,7 @@ install: $(TARGET)
 	install -Dm644 TheUltimateJayManual.md $(DESTDIR)/usr/share/doc/jay/TheUltimateJayManual.md
 	install -Dm644 jaystdlib/README.md $(DESTDIR)/usr/share/doc/jay/jaystdlib.md
 	install -d $(DESTDIR)/lib/jay/modules
+	@for module in $(MODULES); do install -m644 "$module" "$(DESTDIR)/lib/jay/modules/${module##*/}"; done
 	install -d $(DESTDIR)/usr/share/doc/jay/examples
 	cp -a examples/. $(DESTDIR)/usr/share/doc/jay/examples/
 
@@ -50,6 +52,7 @@ debpkg: $(TARGET)
 	install -Dm644 TheUltimateJayManual.md $(DEB_DIR)/usr/share/doc/jay/TheUltimateJayManual.md
 	install -Dm644 jaystdlib/README.md $(DEB_DIR)/usr/share/doc/jay/jaystdlib.md
 	install -d $(DEB_DIR)/lib/jay/modules
+	@for module in $(MODULES); do install -m644 "$module" "$(DEB_DIR)/lib/jay/modules/${module##*/}"; done
 	mkdir -p $(DEB_DIR)/usr/share/doc/jay/examples
 	cp -a examples/. $(DEB_DIR)/usr/share/doc/jay/examples/
 	printf '%s\n' \
