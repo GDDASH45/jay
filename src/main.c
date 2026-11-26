@@ -1,5 +1,5 @@
 /*
- * Jay 0.4.0 - interpreted programming language
+ * Jay 0.5.0 - interpreted programming language
  * SPDX-License-Identifier: GPL-2.0-only
  */
 #include "jay_internal.h"
