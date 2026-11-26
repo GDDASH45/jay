@@ -135,6 +135,7 @@ void skip_separators(void);
 size_t matching_brace(size_t open);
 void execute_range(size_t start, size_t end);
 void statement(void);
+char *expand_imports(const char *source, const char *origin);
 bool run_source(const char *src, const char *name);
 int run_file(const char *path);
 void repl(void);
