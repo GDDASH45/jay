@@ -20,7 +20,7 @@ typedef enum {
     T_LPAREN, T_RPAREN, T_LBRACE, T_RBRACE, T_COMMA,
     T_SEMI, T_PLUS, T_MINUS, T_STAR, T_SLASH, T_PERCENT,
     T_BANG, T_EQUAL, T_EQEQ, T_NE, T_LT, T_LE, T_GT, T_GE,
-    T_AND, T_OR
+    T_AND, T_OR, T_DOT, T_COLON
 } TokenType;
 
 typedef struct {
@@ -29,7 +29,8 @@ typedef struct {
     int line;
 } Token;
 
-typedef enum { V_INT, V_FLOAT, V_STR, V_BOOL, V_CHAR, V_VOID } ValueType;
+typedef enum { V_INT, V_FLOAT, V_STR, V_BOOL, V_CHAR, V_VOID, V_STRUCT } ValueType;
+typedef struct StructInstance StructInstance;
 
 typedef struct {
     ValueType type;
@@ -39,6 +40,7 @@ typedef struct {
         char *s;
         bool b;
         char c;
+        StructInstance *object;
     } as;
 } Value;
 
@@ -50,6 +52,17 @@ typedef struct {
     bool is_volatile;
     char module_name[128];
 } Variable;
+
+#define MAX_STRUCTS 128
+#define MAX_STRUCT_FIELDS 64
+typedef struct { char name[128]; ValueType type; } StructField;
+typedef struct { char name[128]; StructField fields[MAX_STRUCT_FIELDS]; size_t field_count; } StructDefinition;
+struct StructInstance { char type_name[128]; Value fields[MAX_STRUCT_FIELDS]; size_t field_count; };
+extern StructDefinition struct_definitions[MAX_STRUCTS];
+extern size_t struct_count;
+StructDefinition *find_struct(const char *name);
+Value make_struct(const char *name, Value *fields, size_t count, int line);
+Value *find_struct_field(Value *value, const char *name, int line);
 
 #define MAX_FUNCTIONS 4096
 #define MAX_PARAMETERS 128
@@ -68,6 +81,7 @@ typedef struct {
     size_t body_start;
     size_t body_end;
     int line;
+    ValueType return_type;
     char module_name[128];
 } Function;
 
@@ -83,7 +97,7 @@ extern size_t scope_starts[MAX_SCOPE_DEPTH];
 
 bool define_function(const char *name, Parameter *parameters,
                      size_t parameter_count, size_t body_start,
-                     size_t body_end, int line);
+                     size_t body_end, ValueType return_type, int line);
 Function *find_function(const char *name);
 Value call_function(const char *name, Value *arguments,
                     size_t argument_count, int line);
