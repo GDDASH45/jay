@@ -1,0 +1,21 @@
+fn add(int a, int b): int {
+    return a + b
+}
+
+fn display(int value): void {
+    print(value)
+}
+
+struct Point {
+    int x
+    int y
+    str label
+}
+
+let point = Point(10, 20, "origin")
+print(add(point.x, point.y))
+point.x = 25
+print(point.x)
+print(point.y)
+print(point.label)
+display(7)
