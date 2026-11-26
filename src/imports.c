@@ -184,6 +184,15 @@ static bool expand_module(const char *name, const char *origin,
         return false;
     }
 
+    char marker[160];
+    int marker_length = snprintf(marker, sizeof(marker),
+                                 "__jay_module_begin %s\n", name);
+    if (marker_length < 0 || (size_t)marker_length >= sizeof(marker) ||
+        !append_text(output, marker, (size_t)marker_length)) {
+        free(module_source);
+        return false;
+    }
+
     state->active = true;
     char *expanded = expand_source(module_source, path, depth + 1, output);
     state->active = false;
@@ -193,6 +202,8 @@ static bool expand_module(const char *name, const char *origin,
         return false;
 
     free(expanded);
+    if (!append_text(output, "__jay_module_end\n", 17))
+        return false;
     state->loaded = true;
     return true;
 }
@@ -222,7 +233,39 @@ static char *expand_source(const char *source, const char *origin,
                          memcmp(p, "import", 6) == 0 &&
                          (p + 6 == limit || isspace((unsigned char)p[6]));
 
-        if (is_import) {
+        bool is_umport = (size_t)(limit - p) >= 6 &&
+                         memcmp(p, "umport", 6) == 0 &&
+                         (p + 6 == limit || isspace((unsigned char)p[6]));
+
+        if (is_umport) {
+            p += 6;
+            while (p < limit && (*p == ' ' || *p == '\t')) p++;
+            const char *name_start = p;
+            while (p < limit && (isalnum((unsigned char)*p) || *p == '_')) p++;
+            size_t name_length = (size_t)(p - name_start);
+            bool valid = valid_module_name(name_start, name_length);
+            while (p < limit && isspace((unsigned char)*p)) p++;
+            if (p < limit && *p == ';') {
+                p++;
+                while (p < limit && isspace((unsigned char)*p)) p++;
+            }
+            if (p < limit && *p != '#') valid = false;
+            if (!valid) {
+                fprintf(stderr, "%s: error: invalid umport statement\n", origin);
+                return NULL;
+            }
+            char name[128];
+            memcpy(name, name_start, name_length);
+            name[name_length] = '\0';
+            ImportedModule *state = module_state(name);
+            if (!state) {
+                fprintf(stderr, "%s: error: too many imported modules\n", origin);
+                return NULL;
+            }
+            state->loaded = false;
+            if (!append_text(output, line, line_length)) return NULL;
+            if (end && !append_text(output, "\n", 1)) return NULL;
+        } else if (is_import) {
             p += 6;
             while (p < limit && (*p == ' ' || *p == '\t'))
                 p++;
