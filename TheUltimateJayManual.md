@@ -161,3 +161,38 @@ jay --run-bytecode program.jbc
 ```
 
 The compiler expands module imports before encoding the token stream. Therefore imported module contents are part of the compiled file, and the original module files are not needed when running that bytecode. The bytecode format has a versioned header and validates token types, record lengths, and file boundaries when loading. Jay continues to interpret ordinary `.jay` files directly.
+
+
+## Functions and return types
+
+Functions can declare a return type after their parameter list. Supported return types are `int`, `float`, `str`, `bool`, `char`, and `void`.
+
+```jay
+fn add(int a, int b): int {
+    return a + b
+}
+
+fn greet(str name): void {
+    print("Hello, " + name)
+}
+```
+
+Jay checks returned values against the declared type. Integer-to-float and integral float-to-integer conversions follow the normal variable conversion rules. A non-void function must return a value.
+
+## Structs
+
+Structs define records with typed fields. Create instances by passing field values in declaration order.
+
+```jay
+struct Point {
+    int x
+    int y
+}
+
+let point = Point(10, 20)
+print(point.x)
+point.x = 25
+print(point.x)
+```
+
+Struct fields support the built-in Jay types. Instances are values: assigning one struct value to another copies its fields.
