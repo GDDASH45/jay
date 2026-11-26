@@ -29,7 +29,7 @@ install: $(TARGET)
 	install -Dm644 TheUltimateJayManual.md $(DESTDIR)/usr/share/doc/jay/TheUltimateJayManual.md
 	install -Dm644 jaystdlib/README.md $(DESTDIR)/usr/share/doc/jay/jaystdlib.md
 	install -d $(DESTDIR)/lib/jay/modules
-	@for module in $(MODULES); do install -m644 "$module" "$(DESTDIR)/lib/jay/modules/${module##*/}"; done
+	@if [ -d modules ]; then cp -a modules/. "$(DESTDIR)/lib/jay/modules/"; fi
 	install -d $(DESTDIR)/usr/share/doc/jay/examples
 	cp -a examples/. $(DESTDIR)/usr/share/doc/jay/examples/
 
@@ -51,7 +51,7 @@ debpkg: $(TARGET)
 	install -Dm644 TheUltimateJayManual.md $(DEB_DIR)/usr/share/doc/jay/TheUltimateJayManual.md
 	install -Dm644 jaystdlib/README.md $(DEB_DIR)/usr/share/doc/jay/jaystdlib.md
 	install -d $(DEB_DIR)/lib/jay/modules
-	@for module in $(MODULES); do install -m644 "$module" "$(DEB_DIR)/lib/jay/modules/${module##*/}"; done
+	@if [ -d modules ]; then cp -a modules/. "$(DEB_DIR)/lib/jay/modules/"; fi
 	mkdir -p $(DEB_DIR)/usr/share/doc/jay/examples
 	cp -a examples/. $(DEB_DIR)/usr/share/doc/jay/examples/
 	printf '%s\n' \
