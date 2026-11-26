@@ -29,7 +29,7 @@ typedef struct {
     int line;
 } Token;
 
-typedef enum { V_INT, V_FLOAT, V_STR, V_BOOL, V_CHAR, V_VOID, V_STRUCT } ValueType;
+typedef enum { V_INT, V_FLOAT, V_STR, V_BOOL, V_CHAR, V_VOID, V_STRUCT, V_INFER } ValueType;
 typedef struct StructInstance StructInstance;
 
 typedef struct {
