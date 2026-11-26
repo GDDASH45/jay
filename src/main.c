@@ -42,6 +42,8 @@ void reset_interpreter(void)
 {
     clear_variables();
     clear_functions();
+    memset(struct_definitions, 0, sizeof(struct_definitions));
+    struct_count = 0;
 
     free_value(&return_value);
     return_value = make_void();
