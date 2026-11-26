@@ -7,7 +7,7 @@ TARGET := build/jay
 SOURCES := src/jay.c
 OBJECTS := $(patsubst src/%.c,build/%.o,$(SOURCES))
 
-.PHONY: all clean install
+.PHONY: all clean install test
 
 all: $(TARGET)
 
@@ -18,6 +18,10 @@ $(TARGET): $(OBJECTS)
 build/%.o: src/%.c
 	@mkdir -p $(@D)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+test: $(TARGET)
+	@output=$($(TARGET) tests/control_flow.jay); expected=$(printf '12\\ncontrol flow: ok'); \\
+	 test "$output" = "$expected" || { printf 'Jay tests failed\\nExpected:\\n%s\\nGot:\\n%s\\n' "$expected" "$output"; exit 1; }
 
 install: $(TARGET)
 	install -Dm755 $(TARGET) $(DESTDIR)/usr/bin/jay
