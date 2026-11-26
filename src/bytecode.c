@@ -76,7 +76,7 @@ bool bytecode_read(const char *path, Token *items, size_t capacity, size_t *coun
               version == 1 && total > 0 && total <= capacity && total <= MAX_TOKENS;
 
     for (uint32_t i = 0; ok && i < total; i++) {
-        unsigned char type, len[2];
+        unsigned char type = 0, len[2] = {0, 0};
         uint32_t line;
         ok = fread(&type, 1, 1, fp) == 1 &&
              read_u32(fp, &line) &&
