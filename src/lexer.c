@@ -83,6 +83,8 @@ bool lex(const char *src)
         case '{': add_token(T_LBRACE, p++, 1, tokline); break;
         case '}': add_token(T_RBRACE, p++, 1, tokline); break;
         case ',': add_token(T_COMMA, p++, 1, tokline); break;
+        case '.': add_token(T_DOT, p++, 1, tokline); break;
+        case ':': add_token(T_COLON, p++, 1, tokline); break;
         case ';': add_token(T_SEMI, p++, 1, tokline); break;
         case '+': add_token(T_PLUS, p++, 1, tokline); break;
         case '-': add_token(T_MINUS, p++, 1, tokline); break;
