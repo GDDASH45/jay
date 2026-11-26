@@ -110,7 +110,7 @@ while (count < 10) {
 }
 ```
 
-`break` and `continue` are only valid inside a `while` loop. Jay 0.5.0 supports user-defined functions and the native standard-library I/O functions `print()`, `putchar()`, `puts()`, and `putnum()`. Arrays and lexical block scopes are not yet implemented.
+`break` and `continue` are only valid inside a `while` loop. Jay 0.9.0 supports user-defined functions and the native standard-library I/O functions `print()`, `putchar()`, `puts()`, and `putnum()`. Arrays and lexical block scopes are not yet implemented.
 
 ## Modules
 
@@ -143,3 +143,21 @@ print(square(6))
 ```
 
 Unloading removes functions and global variables declared by that module. It does not reverse side effects that already occurred.
+
+
+## Bytecode
+
+Jay can compile a source file into a portable token-bytecode file with the `.jbc` extension:
+
+```sh
+jay --compile program.jay -o program.jbc
+jay program.jbc
+```
+
+The explicit execution form is also available:
+
+```sh
+jay --run-bytecode program.jbc
+```
+
+The compiler expands module imports before encoding the token stream. Therefore imported module contents are part of the compiled file, and the original module files are not needed when running that bytecode. The bytecode format has a versioned header and validates token types, record lengths, and file boundaries when loading. Jay continues to interpret ordinary `.jay` files directly.
