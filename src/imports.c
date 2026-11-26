@@ -202,7 +202,8 @@ static bool expand_module(const char *name, const char *origin,
         return false;
 
     free(expanded);
-    if (!append_text(output, "__jay_module_end\n", 17))
+    if (!append_text(output, "\n", 1) ||
+        !append_text(output, "__jay_module_end\n", 17))
         return false;
     state->loaded = true;
     return true;
