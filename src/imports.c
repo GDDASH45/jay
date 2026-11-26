@@ -4,6 +4,11 @@
  */
 #include "jay_internal.h"
 #include <limits.h>
+#include <stdint.h>
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
 
 #define MAX_IMPORTED_MODULES 256
 #define MAX_IMPORT_DEPTH 64
