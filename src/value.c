@@ -102,6 +102,7 @@ bool define_variable(const char *name, Value value, bool typed,
     v->typed = typed;
     v->declared = declared;
     v->is_volatile = is_volatile;
+    snprintf(v->module_name, sizeof(v->module_name), "%s", active_module);
     return true;
 }
 
