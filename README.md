@@ -31,7 +31,7 @@ Print version or usage information:
 ./build/jay --help
 ```
 
-## Current language features
+## Language features
 
 - Explicit declarations: `int count = 10`, `str name = "Jay"`
 - Inferred declarations: `let count = 10`
@@ -40,8 +40,12 @@ Print version or usage information:
 - Optional semicolons and newline-separated statements
 - Arithmetic, comparisons, boolean operators, and string concatenation
 - Variable assignment and the `print(...)` built-in
+- `if` / `else` conditional blocks
+- `while` loops
+- `break` and `continue` inside loops
 - Comments beginning with `#`
 
-Jay is under active development. Functions, control-flow statements, arrays, and user-defined types are not implemented yet.
 
-See [The Ultimate Jay Manual](TheUltimateJayManual.md) for the language notes.
+Run the test suite with `make test`.
+
+See [The Ultimate Jay Manual](TheUltimateJayManual.md) for language details.
