@@ -478,7 +478,10 @@ bool parse_type(ValueType *type)
         *type = V_BOOL;
     else if (match_word("char"))
         *type = V_CHAR;
-    else
+    else if (check(T_IDENT) && find_struct(peek()->text)) {
+        *type = V_STRUCT;
+        advance_token();
+    } else
         return false;
 
     return true;
