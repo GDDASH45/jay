@@ -602,6 +602,50 @@ void statement(void)
         return;
     }
 
+    if (match_word("__jay_module_begin")) {
+        if (!expect(T_IDENT, "expected module name in module marker")) return;
+        if (module_stack_depth >= MAX_SCOPE_DEPTH) {
+            fail_at(line, "module nesting limit reached");
+            return;
+        }
+        snprintf(module_stack[module_stack_depth++], 128, "%s", active_module);
+        snprintf(active_module, 128, "%s", previous()->text);
+        return;
+    }
+
+    if (match_word("__jay_module_end")) {
+        if (module_stack_depth == 0) {
+            fail_at(line, "unmatched module end marker");
+            return;
+        }
+        snprintf(active_module, 128, "%s", module_stack[--module_stack_depth]);
+        return;
+    }
+
+    if (match_word("umport")) {
+        if (!expect(T_IDENT, "expected module name after umport")) return;
+        char module[128];
+        snprintf(module, sizeof(module), "%s", previous()->text);
+        size_t out = 0;
+        for (size_t i = 0; i < variable_count; i++) {
+            if (strcmp(variables[i].module_name, module) == 0) {
+                free_value(&variables[i].value);
+                continue;
+            }
+            if (out != i) variables[out] = variables[i];
+            out++;
+        }
+        variable_count = out;
+        out = 0;
+        for (size_t i = 0; i < function_count; i++) {
+            if (strcmp(functions[i].module_name, module) == 0) continue;
+            if (out != i) functions[out] = functions[i];
+            out++;
+        }
+        function_count = out;
+        return;
+    }
+
     if (match_word("return")) {
         parse_return(line);
         return;
