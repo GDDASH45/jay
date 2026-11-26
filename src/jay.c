@@ -567,16 +567,20 @@ static void statement(void)
         if (!expect(T_EQUAL, "expected '=' in variable declaration")) return;
         Value value = expression();
         Value stored = value;
+        bool converted = false;
         if (typed && !convert_value(value, declared, &stored)) {
             char msg[256];
             snprintf(msg, sizeof(msg), "cannot initialize %s variable with %s",
                      type_name(declared), type_name(value.type));
             fail_at(line, msg);
-        } else if (!define_variable(name.text, stored, !inferred, declared, is_volatile, line)) {
-            /* Error already reported. */
+        } else {
+            converted = typed;
+            if (!define_variable(name.text, stored, !inferred, declared, is_volatile, line)) {
+                /* Error already reported. */
+            }
         }
         free_value(&value);
-        if (typed && stored.type != value.type) free_value(&stored);
+        if (converted) free_value(&stored);
         return;
     }
 
