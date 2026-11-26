@@ -130,13 +130,16 @@ Value call_function(const char *name, Value *arguments,
     Value result = make_void();
 
     if (valid && flow_state == 3) {
-        if (return_value.type == V_VOID || function->return_type == V_VOID) {
+        if (function->return_type == V_INFER) {
+            result = clone_value(return_value);
+        } else if (return_value.type == V_VOID || function->return_type == V_VOID) {
             if (return_value.type != function->return_type)
                 fail_at(line, "function return value does not match declared return type");
         } else if (!convert_value(return_value, function->return_type, &result)) {
             fail_at(line, "function returned a value with the wrong type");
         }
-    } else if (valid && function->return_type != V_VOID) {
+    } else if (valid && function->return_type != V_VOID &&
+               function->return_type != V_INFER) {
         fail_at(line, "non-void function did not return a value");
     }
 
