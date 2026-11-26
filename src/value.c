@@ -45,7 +45,7 @@ Value clone_value(Value v)
     if (v.type == V_STRUCT && v.as.object) {
         Value copy = {.type = V_STRUCT};
         copy.as.object = calloc(1, sizeof(*copy.as.object));
-        if (!copy.as.object) { fputs("jay: out of memory\\n", stderr); exit(2); }
+        if (!copy.as.object) { fputs("jay: out of memory\n", stderr); exit(2); }
         snprintf(copy.as.object->type_name, sizeof(copy.as.object->type_name), "%s", v.as.object->type_name);
         copy.as.object->field_count = v.as.object->field_count;
         for (size_t i = 0; i < v.as.object->field_count; i++)
@@ -89,7 +89,7 @@ Value make_struct(const char *name, Value *fields, size_t count, int line)
     }
     Value result = {.type = V_STRUCT};
     result.as.object = calloc(1, sizeof(*result.as.object));
-    if (!result.as.object) { fputs("jay: out of memory\\n", stderr); exit(2); }
+    if (!result.as.object) { fputs("jay: out of memory\n", stderr); exit(2); }
     snprintf(result.as.object->type_name, sizeof(result.as.object->type_name), "%s", name);
     result.as.object->field_count = count;
     for (size_t i = 0; i < count; i++) {
