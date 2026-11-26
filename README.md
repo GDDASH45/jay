@@ -28,9 +28,12 @@ Print version or usage information with `jay --version` and `jay --help`.
 - `if` / `else` conditional blocks
 - `while` loops
 - `break` and `continue` inside loops
+- Module imports using `import name`, loaded from `/lib/jay/modules/name.jmd`
 - Comments beginning with `#`
 
 Run the test suite with `make test`.
+
+Jay modules use the `.jmd` extension and are loaded from `/lib/jay/modules/`. Set `JAY_MODULE_DIR` to override the module directory (useful for development and testing). Imports are expanded in place; repeated imports are ignored and circular imports are rejected.
 
 The native standard library is maintained separately in [`jaystdlib/`](jaystdlib/README.md).
 
