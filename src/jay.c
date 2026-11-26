@@ -1,5 +1,5 @@
 /*
- * Jay 0.1.0 - interpreted programming language
+ * Jay 0.2.0 - interpreted programming language
  * SPDX-License-Identifier: MIT
  */
 #include <ctype.h>
