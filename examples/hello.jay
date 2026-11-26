@@ -1,4 +1,4 @@
-# Jay 0.1.0 example
+# Jay 0.2.0 example
 
 str greeting = "Hello from "
 str language = "Jay"
@@ -9,7 +9,7 @@ char initial = 'J'
 volatile int status = 1
 
 print(greeting + language)
-print("Version: " + "0.1.0")
+print("Version: " + "0.2.0")
 print(major)
 print(release)
 print(ready)
@@ -21,4 +21,3 @@ print(status)
 
 int answer = 6 * 7
 print(answer)
-
