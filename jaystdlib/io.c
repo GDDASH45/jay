@@ -88,7 +88,7 @@ bool jaystdlib_call(const char *name, Value *arguments,
         if (!require_type(name, arguments[0], V_INT, line))
             return true;
 
-        if (printf("%lld\\n", arguments[0].as.i) < 0)
+        if (printf("%lld\n", arguments[0].as.i) < 0)
             fail_at(line, "putnum() failed to write to stdout");
 
         return true;
