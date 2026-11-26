@@ -57,7 +57,15 @@ bool run_source(const char *src, const char *name)
     loop_depth = 0;
     flow_state = 0;
 
-    if (!lex(src))
+    char *expanded = expand_imports(src, name);
+    if (!expanded) {
+        errors++;
+        return false;
+    }
+
+    bool lexed = lex(expanded);
+    free(expanded);
+    if (!lexed)
         return false;
 
     while (!check(T_EOF)) {
