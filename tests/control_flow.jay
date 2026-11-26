@@ -17,3 +17,9 @@ if (total == 12) {
 } else {
     print("control flow: failed")
 }
+bool ready = false
+if (ready) {
+    print("else: failed")
+} else {
+    print("else: ok")
+}
