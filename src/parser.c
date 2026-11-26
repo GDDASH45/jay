@@ -117,6 +117,23 @@ Value primary(void)
             return result;
         }
 
+        StructDefinition *definition = find_struct(t.text);
+        if (definition && match(T_LPAREN)) {
+            Value args[MAX_STRUCT_FIELDS];
+            size_t count = 0;
+            if (!check(T_RPAREN)) {
+                do {
+                    Value arg = expression();
+                    if (count < MAX_STRUCT_FIELDS) args[count++] = arg;
+                    else { fail_at(t.line, "too many struct fields"); free_value(&arg); }
+                } while (match(T_COMMA));
+            }
+            expect(T_RPAREN, "expected ')' after struct initializer");
+            Value instance = make_struct(t.text, args, count, t.line);
+            for (size_t i = 0; i < count; i++) free_value(&args[i]);
+            return instance;
+        }
+
         Variable *var = find_variable(t.text);
 
         if (!var) {
@@ -129,7 +146,18 @@ Value primary(void)
             return make_void();
         }
 
-        return clone_value(var->value);
+        Value result = clone_value(var->value);
+        if (match(T_DOT)) {
+            if (!expect(T_IDENT, "expected field name after '.'")) {
+                free_value(&result);
+                return make_void();
+            }
+            Value *field = find_struct_field(&result, previous()->text, t.line);
+            Value member = field ? clone_value(*field) : make_void();
+            free_value(&result);
+            return member;
+        }
+        return result;
     }
 
     fail_at(t.line, "expected an expression");
@@ -544,6 +572,14 @@ static void parse_function_declaration(int line)
     if (!expect(T_RPAREN, "expected ')' after parameters"))
         return;
 
+    ValueType return_type = V_VOID;
+    if (match(T_COLON)) {
+        if (!match_word("void") && !parse_type(&return_type)) {
+            fail_at(line, "expected a return type after ':'");
+            return;
+        }
+    }
+
     skip_separators();
 
     if (!expect(T_LBRACE, "expected '{' before function body"))
@@ -558,7 +594,7 @@ static void parse_function_declaration(int line)
     }
 
     define_function(name.text, parameters, parameter_count,
-                    body_start, body_end, line);
+                    body_start, body_end, return_type, line);
 
     current = body_end + 1;
 }
@@ -599,6 +635,35 @@ void statement(void)
 
     if (match_word("fn")) {
         parse_function_declaration(line);
+        return;
+    }
+
+    if (match_word("struct")) {
+        if (!expect(T_IDENT, "expected struct name")) return;
+        Token struct_name = *previous();
+        if (find_struct(struct_name.text)) { fail_at(line, "struct is already declared"); return; }
+        if (struct_count >= MAX_STRUCTS) { fail_at(line, "struct limit reached"); return; }
+        skip_separators();
+        if (!expect(T_LBRACE, "expected '{' after struct name")) return;
+        StructDefinition *definition = &struct_definitions[struct_count++];
+        memset(definition, 0, sizeof(*definition));
+        snprintf(definition->name, sizeof(definition->name), "%s", struct_name.text);
+        while (!check(T_RBRACE) && !check(T_EOF)) {
+            skip_separators();
+            if (check(T_RBRACE)) break;
+            ValueType field_type;
+            if (!parse_type(&field_type)) { fail_at(peek()->line, "expected built-in field type"); break; }
+            if (!expect(T_IDENT, "expected field name")) break;
+            if (definition->field_count >= MAX_STRUCT_FIELDS) { fail_at(line, "too many struct fields"); break; }
+            StructField *field = &definition->fields[definition->field_count++];
+            field->type = field_type;
+            snprintf(field->name, sizeof(field->name), "%s", previous()->text);
+            for (size_t i = 0; i + 1 < definition->field_count; i++)
+                if (strcmp(definition->fields[i].name, field->name) == 0)
+                    fail_at(line, "duplicate struct field");
+            skip_separators();
+        }
+        expect(T_RBRACE, "expected '}' after struct fields");
         return;
     }
 
@@ -879,6 +944,26 @@ void statement(void)
 
     if (check(T_IDENT)) {
         Token name = *advance_token();
+
+        if (match(T_DOT)) {
+            if (!expect(T_IDENT, "expected field name after '.'")) return;
+            Token field_name = *previous();
+            if (!expect(T_EQUAL, "expected '=' after struct field")) return;
+            Value replacement = expression();
+            Variable *owner = find_variable(name.text);
+            Value *field = owner ? find_struct_field(&owner->value, field_name.text, line) : NULL;
+            if (!owner) fail_at(line, "undefined variable in struct assignment");
+            else if (field) {
+                StructDefinition *definition = find_struct(owner->value.as.object->type_name);
+                size_t index = (size_t)(field - owner->value.as.object->fields);
+                Value converted = make_void();
+                if (!convert_value(replacement, definition->fields[index].type, &converted))
+                    fail_at(line, "cannot assign incompatible type to struct field");
+                else { free_value(field); *field = converted; }
+            }
+            free_value(&replacement);
+            return;
+        }
 
         if (match(T_EQUAL)) {
             Value value = expression();
