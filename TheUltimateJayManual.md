@@ -110,7 +110,7 @@ while (count < 10) {
 }
 ```
 
-`break` and `continue` are only valid inside a `while` loop. Jay 0.4.0 supports user-defined functions and the native standard-library I/O functions `print()`, `putchar()`, `puts()`, and `putnum()`. Arrays and lexical block scopes are not yet implemented.
+`break` and `continue` are only valid inside a `while` loop. Jay 0.5.0 supports user-defined functions and the native standard-library I/O functions `print()`, `putchar()`, `puts()`, and `putnum()`. Arrays and lexical block scopes are not yet implemented.
 
 ## Modules
 
