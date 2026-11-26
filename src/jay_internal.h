@@ -48,6 +48,7 @@ typedef struct {
     ValueType declared;
     bool typed;
     bool is_volatile;
+    char module_name[128];
 } Variable;
 
 #define MAX_FUNCTIONS 4096
@@ -67,8 +68,12 @@ typedef struct {
     size_t body_start;
     size_t body_end;
     int line;
+    char module_name[128];
 } Function;
 
+extern char active_module[128];
+extern char module_stack[MAX_SCOPE_DEPTH][128];
+extern size_t module_stack_depth;
 extern Function functions[MAX_FUNCTIONS];
 extern size_t function_count;
 
