@@ -589,6 +589,12 @@ static void statement(void)
         return;
     }
 
+    if (word("print") && tokens[current + 1].type == T_LPAREN) {
+        Value result = expression();
+        free_value(&result);
+        return;
+    }
+
     if (check(T_IDENT)) {
         Token name = *advance_token();
         if (match(T_EQUAL)) {
