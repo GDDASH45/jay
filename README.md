@@ -48,4 +48,4 @@ sudo apt install debhelper
 dpkg-buildpackage -us -uc -b
 ```
 
-The resulting `jay_0.4.0-1_amd64.deb` is written to the parent directory.
+The resulting `jay_0.5.0-1_amd64.deb` is written to the parent directory.
