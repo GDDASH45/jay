@@ -38,7 +38,7 @@ static void clear_functions(void)
     function_count = 0;
 }
 
-static void reset_interpreter(void)
+void reset_interpreter(void)
 {
     clear_variables();
     clear_functions();
@@ -188,6 +188,13 @@ void usage(const char *argv0)
 
 int main(int argc, char **argv)
 {
+    if (argc == 5 && strcmp(argv[1], "--compile") == 0 &&
+        strcmp(argv[3], "-o") == 0)
+        return compile_file(argv[2], argv[4]);
+
+    if (argc == 3 && strcmp(argv[1], "--run-bytecode") == 0)
+        return run_bytecode(argv[2]);
+
     if (argc > 2) {
         usage(argv[0]);
         return 2;
@@ -206,11 +213,14 @@ int main(int argc, char **argv)
             return 0;
         }
 
+        size_t n = strlen(argv[1]);
+        if (n >= 4 && strcmp(argv[1] + n - 4, ".jbc") == 0)
+            return run_bytecode(argv[1]);
+
         return run_file(argv[1]);
     }
 
     repl();
-
     reset_interpreter();
     return 0;
 }
