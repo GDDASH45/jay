@@ -10,9 +10,9 @@
 #include <string.h>
 #include <sys/types.h>
 
-#define JAY_VERSION "0.2.0"
+#define JAY_VERSION "0.3.0"
 #define MAX_TOKENS 8192
-#define MAX_VARS 512
+#define MAX_VARS 2048
 #define MAX_TEXT 1024
 
 typedef enum {
@@ -49,6 +49,39 @@ typedef struct {
     bool typed;
     bool is_volatile;
 } Variable;
+
+#define MAX_FUNCTIONS 4096
+#define MAX_PARAMETERS 128
+#define MAX_SCOPE_DEPTH 128
+
+typedef struct {
+    char name[128];
+    ValueType type;
+    bool typed;
+} Parameter;
+
+typedef struct {
+    char name[128];
+    Parameter parameters[MAX_PARAMETERS];
+    size_t parameter_count;
+    size_t body_start;
+    size_t body_end;
+    int line;
+} Function;
+
+extern Function functions[MAX_FUNCTIONS];
+extern size_t function_count;
+
+extern Value return_value;
+extern size_t scope_depth;
+extern size_t scope_starts[MAX_SCOPE_DEPTH];
+
+bool define_function(const char *name, Parameter *parameters,
+                     size_t parameter_count, size_t body_start,
+                     size_t body_end, int line);
+Function *find_function(const char *name);
+Value call_function(const char *name, Value *arguments,
+                    size_t argument_count, int line);
 
 extern Token tokens[MAX_TOKENS];
 extern size_t token_count, current;

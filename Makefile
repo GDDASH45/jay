@@ -30,3 +30,31 @@ install: $(TARGET)
 
 clean:
 	rm -rf build
+
+.PHONY: debpkg
+
+PACKAGE := jay
+VERSION := 0.3.0
+ARCH := $(shell dpkg --print-architecture)
+DEB_DIR := ../debian
+
+debpkg: $(TARGET)
+	rm -rf $(DEB_DIR)
+	mkdir -p $(DEB_DIR)/DEBIAN
+	install -Dm755 $(TARGET) $(DEB_DIR)/usr/bin/jay
+	install -Dm644 LICENSE $(DEB_DIR)/usr/share/doc/jay/copyright
+	install -Dm644 TheUltimateJayManual.md $(DEB_DIR)/usr/share/doc/jay/TheUltimateJayManual.md
+	mkdir -p $(DEB_DIR)/usr/share/doc/jay/examples
+	cp -a examples/. $(DEB_DIR)/usr/share/doc/jay/examples/
+	printf '%s\n' \
+		'Package: $(PACKAGE)' \
+		'Version: $(VERSION)' \
+		'Section: devel' \
+		'Priority: optional' \
+		'Architecture: $(ARCH)' \
+		'Maintainer: Jay Developers' \
+		'Depends: libc6' \
+		'Description: Jay interpreted programming language' \
+		' An interpreted programming language written in C.' \
+		> $(DEB_DIR)/DEBIAN/control
+	dpkg-deb --root-owner-group --build $(DEB_DIR) ../$(PACKAGE)_$(VERSION)_$(ARCH).deb
