@@ -12,7 +12,11 @@ struct Point {
     str label
 }
 
-let point = Point(10, 20, "origin")
+fn make_point(int x, int y, str label): Point {
+    return Point(x, y, label)
+}
+
+Point point = make_point(10, 20, "origin")
 print(add(point.x, point.y))
 point.x = 25
 print(point.x)
