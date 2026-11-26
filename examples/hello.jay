@@ -1,0 +1,25 @@
+# Jay 0.1.0 example
+
+str greeting = "Hello from "
+str language = "Jay"
+int major = 0
+float release = 1.0
+bool ready = true
+char initial = 'J'
+volatile int status = 1
+
+print(greeting + language)
+print("Version: " + "0.1.0")
+print(major)
+print(release)
+print(ready)
+print(initial)
+print(status)
+
+status = 2
+print(status)
+
+int answer = 6 * 7
+print(answer)
+
+if_this_is_not_supported_yet = 0
