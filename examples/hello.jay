@@ -22,4 +22,3 @@ print(status)
 int answer = 6 * 7
 print(answer)
 
-if_this_is_not_supported_yet = 0
