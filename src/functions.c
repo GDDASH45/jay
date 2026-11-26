@@ -43,6 +43,7 @@ bool define_function(const char *name, Parameter *parameters,
     function->body_start = body_start;
     function->body_end = body_end;
     function->line = line;
+    snprintf(function->module_name, sizeof(function->module_name), "%s", active_module);
 
     return true;
 }
