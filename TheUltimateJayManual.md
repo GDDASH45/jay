@@ -127,3 +127,19 @@ The import above loads `/lib/jay/modules/math.jmd`. Module names contain letters
 Imports occupy their own line. A trailing semicolon is optional. Module source is expanded at the import location, so declarations and functions become available to the importing program. A module is loaded only once per program; circular imports are reported as errors.
 
 Set the `JAY_MODULE_DIR` environment variable to use a different module directory. This is useful when developing modules without installing them system-wide.
+
+
+### Unloading modules
+
+Use `umport` to unload a previously imported module:
+
+```jay
+import math
+print(square(5))
+umport math
+# Functions and global variables from math are now unavailable.
+import math
+print(square(6))
+```
+
+Unloading removes functions and global variables declared by that module. It does not reverse side effects that already occurred.
