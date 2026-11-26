@@ -87,35 +87,6 @@ Value primary(void)
     if (check(T_IDENT)) {
         advance_token();
 
-        if (strcmp(t.text, "print") == 0) {
-            if (!expect(T_LPAREN, "expected '(' after print"))
-                return make_void();
-
-            bool first = true;
-
-            while (!check(T_RPAREN) && !check(T_EOF)) {
-                if (!first && !match(T_COMMA)) {
-                    fail_at(peek()->line,
-                            "expected ',' between print arguments");
-                    break;
-                }
-
-                Value arg = expression();
-                print_value(arg);
-                free_value(&arg);
-
-                first = false;
-
-                if (check(T_RPAREN))
-                    break;
-            }
-
-            expect(T_RPAREN, "expected ')' after print arguments");
-            putchar('\n');
-
-            return make_void();
-        }
-
         if (match(T_LPAREN)) {
             Value arguments[MAX_PARAMETERS];
             size_t argument_count = 0;
@@ -859,14 +830,6 @@ void statement(void)
     if (is_volatile) {
         fail_at(line,
                 "'volatile' must precede a typed variable declaration or let");
-        return;
-    }
-
-    if (word("print") &&
-        current + 1 < token_count &&
-        tokens[current + 1].type == T_LPAREN) {
-        Value result = expression();
-        free_value(&result);
         return;
     }
 

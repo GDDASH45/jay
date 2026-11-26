@@ -50,6 +50,12 @@ bool define_function(const char *name, Parameter *parameters,
 Value call_function(const char *name, Value *arguments,
                     size_t argument_count, int line)
 {
+    Value library_result = make_void();
+
+    if (jaystdlib_call(name, arguments, argument_count,
+                       &library_result, line))
+        return library_result;
+
     Function *function = find_function(name);
 
     if (!function) {

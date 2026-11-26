@@ -82,6 +82,8 @@ bool define_function(const char *name, Parameter *parameters,
 Function *find_function(const char *name);
 Value call_function(const char *name, Value *arguments,
                     size_t argument_count, int line);
+bool jaystdlib_call(const char *name, Value *arguments,
+                    size_t argument_count, Value *result, int line);
 
 extern Token tokens[MAX_TOKENS];
 extern size_t token_count, current;

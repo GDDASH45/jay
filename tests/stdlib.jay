@@ -1,0 +1,5 @@
+print("Jay stdlib")
+print("value: ", 7)
+putchar('J')
+puts("ay")
+putnum(42)
