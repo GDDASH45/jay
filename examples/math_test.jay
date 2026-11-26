@@ -1,0 +1,7 @@
+import math
+
+print(square(5))
+print(cube(3))
+print(absolute(-12))
+print(max(10, 20))
+print(min(10, 20))
