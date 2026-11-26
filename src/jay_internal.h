@@ -148,6 +148,7 @@ int run_bytecode(const char *path);
 int compile_file(const char *source_path, const char *bytecode_path);
 int run_file(const char *path);
 void repl(void);
+void reset_interpreter(void);
 void usage(const char *argv0);
 int main(int argc, char **argv);
 
