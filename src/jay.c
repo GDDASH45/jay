@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define JAY_VERSION "0.1.0"
+#define JAY_VERSION "0.2.0"
 #define MAX_TOKENS 8192
 #define MAX_VARS 512
 #define MAX_TEXT 1024
@@ -56,6 +56,8 @@ static Variable variables[MAX_VARS];
 static size_t variable_count;
 static const char *source_name = "<input>";
 static int errors;
+static int loop_depth;
+static int flow_state; /* 0 = normal, 1 = break, 2 = continue */
 
 static void fail_at(int line, const char *message)
 {
@@ -550,12 +552,164 @@ static void skip_separators(void)
     while (match(T_EOL) || match(T_SEMI)) {}
 }
 
+static void statement(void);
+
+static size_t matching_brace(size_t open)
+{
+    if (open >= token_count || tokens[open].type != T_LBRACE)
+        return (size_t)-1;
+
+    size_t depth = 0;
+    for (size_t i = open; i < token_count; i++) {
+        if (tokens[i].type == T_LBRACE)
+            depth++;
+        else if (tokens[i].type == T_RBRACE) {
+            if (--depth == 0)
+                return i;
+        }
+    }
+    return (size_t)-1;
+}
+
+static void execute_range(size_t start, size_t end)
+{
+    current = start;
+    while (current < end && flow_state == 0 && !check(T_EOF)) {
+        size_t before = current;
+        statement();
+        skip_separators();
+        if (current == before && current < end)
+            current++;
+    }
+}
+
 static void statement(void)
 {
     skip_separators();
     if (check(T_EOF) || check(T_RBRACE)) return;
 
     int line = peek()->line;
+
+    if (match_word("break")) {
+        if (loop_depth == 0)
+            fail_at(line, "'break' is only valid inside a loop");
+        else
+            flow_state = 1;
+        return;
+    }
+
+    if (match_word("continue")) {
+        if (loop_depth == 0)
+            fail_at(line, "'continue' is only valid inside a loop");
+        else
+            flow_state = 2;
+        return;
+    }
+
+    if (match_word("if")) {
+        if (!expect(T_LPAREN, "expected '(' after if"))
+            return;
+        Value condition = expression();
+        bool take_then = condition.type == V_BOOL && condition.as.b;
+        if (condition.type != V_BOOL)
+            fail_at(line, "if condition must be bool");
+        free_value(&condition);
+        if (!expect(T_RPAREN, "expected ')' after if condition"))
+            return;
+        skip_separators();
+        if (!expect(T_LBRACE, "expected '{' after if condition"))
+            return;
+
+        size_t then_start = current;
+        size_t then_close = matching_brace(current - 1);
+        if (then_close == (size_t)-1) {
+            fail_at(line, "unterminated if block");
+            return;
+        }
+        size_t after_then = then_close + 1;
+        size_t else_start = 0, else_close = 0;
+        bool has_else = false;
+
+        current = after_then;
+        skip_separators();
+        if (match_word("else")) {
+            skip_separators();
+            if (!expect(T_LBRACE, "expected '{' after else"))
+                return;
+            else_start = current;
+            else_close = matching_brace(current - 1);
+            if (else_close == (size_t)-1) {
+                fail_at(line, "unterminated else block");
+                return;
+            }
+            has_else = true;
+            current = else_close + 1;
+        }
+
+        size_t after_statement = current;
+        if (take_then)
+            execute_range(then_start, then_close);
+        else if (has_else)
+            execute_range(else_start, else_close);
+        current = after_statement;
+        return;
+    }
+
+    if (match_word("while")) {
+        if (!expect(T_LPAREN, "expected '(' after while"))
+            return;
+        size_t condition_start = current;
+        Value first_condition = expression();
+        size_t condition_end = current;
+        bool valid_condition = first_condition.type == V_BOOL;
+        if (!valid_condition)
+            fail_at(line, "while condition must be bool");
+        free_value(&first_condition);
+        if (!expect(T_RPAREN, "expected ')' after while condition"))
+            return;
+        skip_separators();
+        if (!expect(T_LBRACE, "expected '{' after while condition"))
+            return;
+
+        size_t body_start = current;
+        size_t body_close = matching_brace(current - 1);
+        if (body_close == (size_t)-1) {
+            fail_at(line, "unterminated while block");
+            return;
+        }
+        size_t after_loop = body_close + 1;
+
+        if (valid_condition) {
+            loop_depth++;
+            for (;;) {
+                current = condition_start;
+                Value condition = expression();
+                current = condition_end;
+                bool keep_going = condition.type == V_BOOL && condition.as.b;
+                if (condition.type != V_BOOL)
+                    fail_at(line, "while condition must evaluate to bool");
+                free_value(&condition);
+                if (!keep_going || errors)
+                    break;
+
+                flow_state = 0;
+                execute_range(body_start, body_close);
+                if (flow_state == 1) {
+                    flow_state = 0;
+                    break;
+                }
+                if (flow_state == 2)
+                    flow_state = 0;
+                if (errors)
+                    break;
+            }
+            loop_depth--;
+        }
+        flow_state = 0;
+        current = after_loop;
+        return;
+    }
+
     bool is_volatile = match_word("volatile");
     ValueType declared;
     bool typed = parse_type(&declared);
@@ -589,7 +743,7 @@ static void statement(void)
         return;
     }
 
-    if (word("print") && tokens[current + 1].type == T_LPAREN) {
+    if (word("print") && current + 1 < token_count && tokens[current + 1].type == T_LPAREN) {
         Value result = expression();
         free_value(&result);
         return;
