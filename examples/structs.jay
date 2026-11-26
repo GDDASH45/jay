@@ -1,0 +1,15 @@
+struct Point {
+    int x
+    int y
+}
+
+fn distance_squared(Point a, Point b): int {
+    let dx = a.x - b.x
+    let dy = a.y - b.y
+    return dx * dx + dy * dy
+}
+
+let first = Point(2, 3)
+let second = Point(5, 7)
+
+print(distance_squared(first, second))
