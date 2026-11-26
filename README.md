@@ -52,3 +52,8 @@ dpkg-buildpackage -us -uc -b
 ```
 
 The resulting `jay_0.9.0-1_amd64.deb` is written to the parent directory.
+
+
+## Structs and typed functions
+
+Jay supports typed function return declarations such as `fn add(int a, int b): int`, plus `void` functions. It also supports typed struct definitions, positional construction (for example, `Point(10, 20)`), field reads, and field assignments.
