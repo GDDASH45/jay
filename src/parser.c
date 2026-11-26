@@ -87,6 +87,23 @@ Value primary(void)
     if (check(T_IDENT)) {
         advance_token();
 
+        StructDefinition *definition = find_struct(t.text);
+        if (definition && match(T_LPAREN)) {
+            Value args[MAX_STRUCT_FIELDS];
+            size_t count = 0;
+            if (!check(T_RPAREN)) {
+                do {
+                    Value arg = expression();
+                    if (count < MAX_STRUCT_FIELDS) args[count++] = arg;
+                    else { fail_at(t.line, "too many struct fields"); free_value(&arg); }
+                } while (match(T_COMMA));
+            }
+            expect(T_RPAREN, "expected ')' after struct initializer");
+            Value instance = make_struct(t.text, args, count, t.line);
+            for (size_t i = 0; i < count; i++) free_value(&args[i]);
+            return instance;
+        }
+
         if (match(T_LPAREN)) {
             Value arguments[MAX_PARAMETERS];
             size_t argument_count = 0;
@@ -115,23 +132,6 @@ Value primary(void)
                 free_value(&arguments[i]);
 
             return result;
-        }
-
-        StructDefinition *definition = find_struct(t.text);
-        if (definition && match(T_LPAREN)) {
-            Value args[MAX_STRUCT_FIELDS];
-            size_t count = 0;
-            if (!check(T_RPAREN)) {
-                do {
-                    Value arg = expression();
-                    if (count < MAX_STRUCT_FIELDS) args[count++] = arg;
-                    else { fail_at(t.line, "too many struct fields"); free_value(&arg); }
-                } while (match(T_COMMA));
-            }
-            expect(T_RPAREN, "expected ')' after struct initializer");
-            Value instance = make_struct(t.text, args, count, t.line);
-            for (size_t i = 0; i < count; i++) free_value(&args[i]);
-            return instance;
         }
 
         Variable *var = find_variable(t.text);
