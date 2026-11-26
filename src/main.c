@@ -183,7 +183,9 @@ void repl(void)
 void usage(const char *argv0)
 {
     printf("Jay %s - interpreted programming language\n", JAY_VERSION);
-    printf("Usage: %s [--version] [--help] [file.jay]\n", argv0);
+    printf("Usage: %s [--version] [--help] [file.jay|file.jbc]\n", argv0);
+    printf("       %s --compile source.jay -o output.jbc\n", argv0);
+    printf("       %s --run-bytecode file.jbc\n", argv0);
 }
 
 int main(int argc, char **argv)
