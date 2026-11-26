@@ -2,7 +2,6 @@
 #include "jay_internal.h"
 #include <stdint.h>
 
-#define JAY_BC_HEADER_SIZE 16
 static const unsigned char magic[8] = { 'J', 'A', 'Y', 'B', 'C', 0, 1, 0 };
 
 static bool write_u32(FILE *fp, uint32_t value)
@@ -77,12 +76,14 @@ bool bytecode_read(const char *path, Token *items, size_t capacity, size_t *coun
 
     for (uint32_t i = 0; ok && i < total; i++) {
         unsigned char type = 0, len[2] = {0, 0};
-        uint32_t line;
+        uint32_t line = 0;
         ok = fread(&type, 1, 1, fp) == 1 &&
              read_u32(fp, &line) &&
              fread(len, 1, 2, fp) == 2;
         size_t n = (size_t)len[0] | ((size_t)len[1] << 8);
-        if (!ok || type > T_OR || n >= MAX_TEXT || line > INT32_MAX) {
+        if (!ok || type > T_OR || n >= MAX_TEXT || line > INT32_MAX ||
+            (type == T_EOF && i + 1 != total) ||
+            (type != T_EOF && i + 1 == total)) {
             ok = false;
             break;
         }
