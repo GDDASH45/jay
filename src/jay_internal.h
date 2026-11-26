@@ -10,7 +10,7 @@
 #include <string.h>
 #include <sys/types.h>
 
-#define JAY_VERSION "0.3.0"
+#define JAY_VERSION "0.4.0"
 #define MAX_TOKENS 8192
 #define MAX_VARS 2048
 #define MAX_TEXT 1024
