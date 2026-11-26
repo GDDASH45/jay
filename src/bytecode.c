@@ -81,7 +81,7 @@ bool bytecode_read(const char *path, Token *items, size_t capacity, size_t *coun
              read_u32(fp, &line) &&
              fread(len, 1, 2, fp) == 2;
         size_t n = (size_t)len[0] | ((size_t)len[1] << 8);
-        if (!ok || type > T_OR || n >= MAX_TEXT || line > INT32_MAX ||
+        if (!ok || type > T_COLON || n >= MAX_TEXT || line > INT32_MAX ||
             (type == T_EOF && i + 1 != total) ||
             (type != T_EOF && i + 1 == total)) {
             ok = false;
