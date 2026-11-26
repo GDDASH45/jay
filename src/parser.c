@@ -1,331 +1,39 @@
 /*
  * Jay 0.2.0 - interpreted programming language
- * SPDX-License-Identifier: MIT
+ * SPDX-License-Identifier: GPL-2.0-only
  */
-#include <ctype.h>
-#include <errno.h>
-#include <math.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "jay_internal.h"
 
-#define JAY_VERSION "0.2.0"
-#define MAX_TOKENS 8192
-#define MAX_VARS 512
-#define MAX_TEXT 1024
+Token *peek(void) { return &tokens[current]; }
 
-typedef enum {
-    T_EOF, T_EOL, T_IDENT, T_INT, T_FLOAT, T_STRING, T_CHAR,
-    T_LPAREN, T_RPAREN, T_LBRACE, T_RBRACE, T_COMMA,
-    T_SEMI, T_PLUS, T_MINUS, T_STAR, T_SLASH, T_PERCENT,
-    T_BANG, T_EQUAL, T_EQEQ, T_NE, T_LT, T_LE, T_GT, T_GE,
-    T_AND, T_OR
-} TokenType;
+Token *previous(void) { return &tokens[current - 1]; }
 
-typedef struct {
-    TokenType type;
-    char text[MAX_TEXT];
-    int line;
-} Token;
+bool check(TokenType t) { return peek()->type == t; }
 
-typedef enum { V_INT, V_FLOAT, V_STR, V_BOOL, V_CHAR, V_VOID } ValueType;
+Token *advance_token(void) { if (!check(T_EOF)) current++; return previous(); }
 
-typedef struct {
-    ValueType type;
-    union {
-        long long i;
-        double f;
-        char *s;
-        bool b;
-        char c;
-    } as;
-} Value;
+bool match(TokenType t) { if (!check(t)) return false; advance_token(); return true; }
 
-typedef struct {
-    char name[128];
-    Value value;
-    ValueType declared;
-    bool typed;
-    bool is_volatile;
-} Variable;
-
-static Token tokens[MAX_TOKENS];
-static size_t token_count, current;
-static Variable variables[MAX_VARS];
-static size_t variable_count;
-static const char *source_name = "<input>";
-static int errors;
-static int loop_depth;
-static int flow_state; /* 0 = normal, 1 = break, 2 = continue */
-
-static void fail_at(int line, const char *message)
-{
-    fprintf(stderr, "%s:%d: error: %s\n", source_name, line, message);
-    errors++;
-}
-
-static char *copy_string(const char *s)
-{
-    size_t n = strlen(s) + 1;
-    char *p = malloc(n);
-    if (!p) {
-        fputs("jay: out of memory\n", stderr);
-        exit(2);
-    }
-    memcpy(p, s, n);
-    return p;
-}
-
-static void add_token(TokenType type, const char *start, size_t length, int line)
-{
-    if (token_count >= MAX_TOKENS) {
-        fail_at(line, "too many tokens in source file");
-        return;
-    }
-    Token *t = &tokens[token_count++];
-    t->type = type;
-    t->line = line;
-    if (length >= sizeof(t->text)) length = sizeof(t->text) - 1;
-    memcpy(t->text, start, length);
-    t->text[length] = '\0';
-}
-
-static bool lex(const char *src)
-{
-    const char *p = src;
-    int line = 1;
-    token_count = 0;
-    while (*p) {
-        if (*p == ' ' || *p == '\t' || *p == '\r') { p++; continue; }
-        if (*p == '\n') { add_token(T_EOL, "\n", 1, line++); p++; continue; }
-        if (*p == '#') { while (*p && *p != '\n') p++; continue; }
-        if (isalpha((unsigned char)*p) || *p == '_') {
-            const char *start = p++;
-            while (isalnum((unsigned char)*p) || *p == '_') p++;
-            add_token(T_IDENT, start, (size_t)(p - start), line);
-            continue;
-        }
-        if (isdigit((unsigned char)*p)) {
-            const char *start = p++;
-            while (isdigit((unsigned char)*p)) p++;
-            TokenType type = T_INT;
-            if (*p == '.' && isdigit((unsigned char)p[1])) {
-                type = T_FLOAT;
-                p++;
-                while (isdigit((unsigned char)*p)) p++;
-            }
-            add_token(type, start, (size_t)(p - start), line);
-            continue;
-        }
-        if (*p == '"' || *p == '\'') {
-            char quote = *p++;
-            char buf[MAX_TEXT];
-            size_t n = 0;
-            bool closed = false;
-            while (*p) {
-                if (*p == quote) { p++; closed = true; break; }
-                if (*p == '\n') break;
-                char c = *p++;
-                if (c == '\\' && *p) {
-                    c = *p++;
-                    if (c == 'n') c = '\n';
-                    else if (c == 't') c = '\t';
-                    else if (c == 'r') c = '\r';
-                }
-                if (n + 1 < sizeof(buf)) buf[n++] = c;
-            }
-            if (!closed) {
-                fail_at(line, "unterminated string or character literal");
-                return false;
-            }
-            buf[n] = '\0';
-            add_token(quote == '"' ? T_STRING : T_CHAR, buf, n, line);
-            continue;
-        }
-        int tokline = line;
-        switch (*p) {
-        case '(': add_token(T_LPAREN, p++, 1, tokline); break;
-        case ')': add_token(T_RPAREN, p++, 1, tokline); break;
-        case '{': add_token(T_LBRACE, p++, 1, tokline); break;
-        case '}': add_token(T_RBRACE, p++, 1, tokline); break;
-        case ',': add_token(T_COMMA, p++, 1, tokline); break;
-        case ';': add_token(T_SEMI, p++, 1, tokline); break;
-        case '+': add_token(T_PLUS, p++, 1, tokline); break;
-        case '-': add_token(T_MINUS, p++, 1, tokline); break;
-        case '*': add_token(T_STAR, p++, 1, tokline); break;
-        case '/': add_token(T_SLASH, p++, 1, tokline); break;
-        case '%': add_token(T_PERCENT, p++, 1, tokline); break;
-        case '!':
-            p++;
-            if (*p == '=') { p++; add_token(T_NE, "!=", 2, tokline); }
-            else add_token(T_BANG, "!", 1, tokline);
-            break;
-        case '=':
-            p++;
-            if (*p == '=') { p++; add_token(T_EQEQ, "==", 2, tokline); }
-            else add_token(T_EQUAL, "=", 1, tokline);
-            break;
-        case '<':
-            p++;
-            if (*p == '=') { p++; add_token(T_LE, "<=", 2, tokline); }
-            else add_token(T_LT, "<", 1, tokline);
-            break;
-        case '>':
-            p++;
-            if (*p == '=') { p++; add_token(T_GE, ">=", 2, tokline); }
-            else add_token(T_GT, ">", 1, tokline);
-            break;
-        case '&':
-            p++;
-            if (*p == '&') { p++; add_token(T_AND, "&&", 2, tokline); }
-            else { fail_at(tokline, "expected '&' after '&'"); return false; }
-            break;
-        case '|':
-            p++;
-            if (*p == '|') { p++; add_token(T_OR, "||", 2, tokline); }
-            else { fail_at(tokline, "expected '|' after '|'"); return false; }
-            break;
-        default:
-            fprintf(stderr, "%s:%d: error: unexpected character '%c'\n", source_name, line, *p);
-            errors++;
-            return false;
-        }
-    }
-    add_token(T_EOF, "", 0, line);
-    return errors == 0;
-}
-
-static Token *peek(void) { return &tokens[current]; }
-static Token *previous(void) { return &tokens[current - 1]; }
-static bool check(TokenType t) { return peek()->type == t; }
-static Token *advance_token(void) { if (!check(T_EOF)) current++; return previous(); }
-static bool match(TokenType t) { if (!check(t)) return false; advance_token(); return true; }
-
-static bool word(const char *s)
+bool word(const char *s)
 {
     return check(T_IDENT) && strcmp(peek()->text, s) == 0;
 }
 
-static bool match_word(const char *s)
+bool match_word(const char *s)
 {
     if (!word(s)) return false;
     advance_token();
     return true;
 }
 
-static bool expect(TokenType t, const char *message)
+bool expect(TokenType t, const char *message)
 {
     if (match(t)) return true;
     fail_at(peek()->line, message);
     return false;
 }
 
-static Value make_int(long long x) { Value v = {.type=V_INT}; v.as.i=x; return v; }
-static Value make_float(double x) { Value v = {.type=V_FLOAT}; v.as.f=x; return v; }
-static Value make_bool(bool x) { Value v = {.type=V_BOOL}; v.as.b=x; return v; }
-static Value make_char(char x) { Value v = {.type=V_CHAR}; v.as.c=x; return v; }
-static Value make_string(const char *x) { Value v = {.type=V_STR}; v.as.s=copy_string(x); return v; }
-static Value make_void(void) { Value v = {.type=V_VOID}; return v; }
-
-static void free_value(Value *v)
-{
-    if (v->type == V_STR) free(v->as.s);
-    v->type = V_VOID;
-}
-
-static Value clone_value(Value v)
-{
-    if (v.type == V_STR) return make_string(v.as.s);
-    return v;
-}
-
-static const char *type_name(ValueType t)
-{
-    switch (t) {
-    case V_INT: return "int";
-    case V_FLOAT: return "float";
-    case V_STR: return "str";
-    case V_BOOL: return "bool";
-    case V_CHAR: return "char";
-    default: return "void";
-    }
-}
-
-static bool is_numeric(Value v) { return v.type == V_INT || v.type == V_FLOAT; }
-static double number(Value v) { return v.type == V_INT ? (double)v.as.i : v.as.f; }
-
-static void print_value(Value v)
-{
-    switch (v.type) {
-    case V_INT: printf("%lld", v.as.i); break;
-    case V_FLOAT: printf("%.15g", v.as.f); break;
-    case V_STR: fputs(v.as.s, stdout); break;
-    case V_BOOL: fputs(v.as.b ? "true" : "false", stdout); break;
-    case V_CHAR: putchar(v.as.c); break;
-    case V_VOID: fputs("void", stdout); break;
-    }
-}
-
-static bool convert_value(Value in, ValueType target, Value *out)
-{
-    if (in.type == target) { *out = clone_value(in); return true; }
-    if (target == V_FLOAT && in.type == V_INT) { *out = make_float((double)in.as.i); return true; }
-    if (target == V_INT && in.type == V_FLOAT && floor(in.as.f) == in.as.f) {
-        *out = make_int((long long)in.as.f); return true;
-    }
-    return false;
-}
-
-static Variable *find_variable(const char *name)
-{
-    for (size_t i = 0; i < variable_count; i++)
-        if (strcmp(variables[i].name, name) == 0) return &variables[i];
-    return NULL;
-}
-
-static bool define_variable(const char *name, Value value, bool typed,
-                            ValueType declared, bool is_volatile, int line)
-{
-    if (find_variable(name)) {
-        fail_at(line, "variable is already declared");
-        return false;
-    }
-    if (variable_count >= MAX_VARS) {
-        fail_at(line, "variable limit reached");
-        return false;
-    }
-    Variable *v = &variables[variable_count++];
-    snprintf(v->name, sizeof(v->name), "%s", name);
-    v->value = clone_value(value);
-    v->typed = typed;
-    v->declared = declared;
-    v->is_volatile = is_volatile;
-    return true;
-}
-
-static bool assign_variable(Variable *var, Value value, int line)
-{
-    Value replacement;
-    if (var->typed) {
-        if (!convert_value(value, var->declared, &replacement)) {
-            char msg[256];
-            snprintf(msg, sizeof(msg), "cannot assign %s to %s variable '%s'",
-                     type_name(value.type), type_name(var->declared), var->name);
-            fail_at(line, msg);
-            return false;
-        }
-    } else {
-        replacement = clone_value(value);
-    }
-    free_value(&var->value);
-    var->value = replacement;
-    return true;
-}
-
-static Value expression(void);
-
-static Value primary(void)
+Value primary(void)
 {
     Token t = *peek();
     if (match(T_INT)) return make_int(strtoll(t.text, NULL, 10));
@@ -379,7 +87,7 @@ static Value primary(void)
     return make_void();
 }
 
-static Value unary(void)
+Value unary(void)
 {
     if (match(T_MINUS)) {
         Value v = unary();
@@ -403,7 +111,7 @@ static Value unary(void)
     return primary();
 }
 
-static Value factor(void)
+Value factor(void)
 {
     Value left = unary();
     while (check(T_STAR) || check(T_SLASH) || check(T_PERCENT)) {
@@ -434,7 +142,7 @@ static Value factor(void)
     return left;
 }
 
-static Value term(void)
+Value term(void)
 {
     Value left = factor();
     while (check(T_PLUS) || check(T_MINUS)) {
@@ -464,7 +172,7 @@ static Value term(void)
     return left;
 }
 
-static Value comparison(void)
+Value comparison(void)
 {
     Value left = term();
     while (check(T_LT) || check(T_LE) || check(T_GT) || check(T_GE)) {
@@ -482,7 +190,7 @@ static Value comparison(void)
     return left;
 }
 
-static Value equality(void)
+Value equality(void)
 {
     Value left = comparison();
     while (check(T_EQEQ) || check(T_NE)) {
@@ -504,7 +212,7 @@ static Value equality(void)
     return left;
 }
 
-static Value logical_and(void)
+Value logical_and(void)
 {
     Value left = equality();
     while (match(T_AND)) {
@@ -520,7 +228,7 @@ static Value logical_and(void)
     return left;
 }
 
-static Value expression(void)
+Value expression(void)
 {
     Value left = logical_and();
     while (match(T_OR)) {
@@ -536,7 +244,7 @@ static Value expression(void)
     return left;
 }
 
-static bool parse_type(ValueType *type)
+bool parse_type(ValueType *type)
 {
     if (match_word("int")) *type = V_INT;
     else if (match_word("float")) *type = V_FLOAT;
@@ -547,14 +255,14 @@ static bool parse_type(ValueType *type)
     return true;
 }
 
-static void skip_separators(void)
+void skip_separators(void)
 {
     while (match(T_EOL) || match(T_SEMI)) {}
 }
 
-static void statement(void);
 
-static size_t matching_brace(size_t open)
+
+size_t matching_brace(size_t open)
 {
     if (open >= token_count || tokens[open].type != T_LBRACE)
         return (size_t)-1;
@@ -571,7 +279,7 @@ static size_t matching_brace(size_t open)
     return (size_t)-1;
 }
 
-static void execute_range(size_t start, size_t end)
+void execute_range(size_t start, size_t end)
 {
     current = start;
     while (current < end && flow_state == 0 && !check(T_EOF)) {
@@ -583,7 +291,7 @@ static void execute_range(size_t start, size_t end)
     }
 }
 
-static void statement(void)
+void statement(void)
 {
     skip_separators();
     if (check(T_EOF) || check(T_RBRACE)) return;
@@ -770,99 +478,4 @@ static void statement(void)
 
     fail_at(line, "unexpected token at start of statement");
     advance_token();
-}
-
-static bool run_source(const char *src, const char *name)
-{
-    source_name = name;
-    errors = 0;
-    current = 0;
-    loop_depth = 0;
-    flow_state = 0;
-    if (!lex(src)) return false;
-    while (!check(T_EOF)) {
-        size_t before = current;
-        statement();
-        skip_separators();
-        if (current == before && !check(T_EOF)) advance_token();
-    }
-    return errors == 0;
-}
-
-static char *read_stream(FILE *fp)
-{
-    size_t cap = 4096, len = 0;
-    char *buf = malloc(cap);
-    if (!buf) return NULL;
-    for (;;) {
-        if (len + 2048 + 1 > cap) {
-            cap *= 2;
-            char *next = realloc(buf, cap);
-            if (!next) { free(buf); return NULL; }
-            buf = next;
-        }
-        size_t n = fread(buf + len, 1, cap - len - 1, fp);
-        len += n;
-        if (n == 0) {
-            if (ferror(fp)) { free(buf); return NULL; }
-            break;
-        }
-    }
-    buf[len] = '\0';
-    return buf;
-}
-
-static int run_file(const char *path)
-{
-    FILE *fp = fopen(path, "rb");
-    if (!fp) {
-        fprintf(stderr, "jay: cannot open '%s': %s\n", path, strerror(errno));
-        return 1;
-    }
-    char *src = read_stream(fp);
-    fclose(fp);
-    if (!src) { fputs("jay: could not read source file\n", stderr); return 1; }
-    bool ok = run_source(src, path);
-    free(src);
-    return ok ? 0 : 1;
-}
-
-static void repl(void)
-{
-    char *line = NULL;
-    size_t cap = 0;
-    puts("Jay Interactive Shell " JAY_VERSION);
-    puts("Type expressions as statements; use Ctrl-D to exit.");
-    while (true) {
-        fputs("jay> ", stdout);
-        fflush(stdout);
-        ssize_t n = getline(&line, &cap, stdin);
-        if (n < 0) break;
-        if (n == 1 && line[0] == '\n') continue;
-        run_source(line, "<repl>");
-    }
-    free(line);
-}
-
-static void usage(const char *argv0)
-{
-    printf("Jay %s - interpreted programming language\n", JAY_VERSION);
-    printf("Usage: %s [--version] [--help] [file.jay]\n", argv0);
-}
-
-int main(int argc, char **argv)
-{
-    if (argc > 2) { usage(argv[0]); return 2; }
-    if (argc == 2) {
-        if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
-            puts("Jay " JAY_VERSION); return 0;
-        }
-        if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0) {
-            usage(argv[0]); return 0;
-        }
-        return run_file(argv[1]);
-    }
-    repl();
-    for (size_t i = 0; i < variable_count; i++) free_value(&variables[i].value);
-    return 0;
 }

@@ -1,0 +1,14 @@
+Source: jay
+Section: interpreters
+Priority: optional
+Maintainer: GDDASH45 <216096093+GDDASH45@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/GDDASH45/jay
+
+Package: jay
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Jay interpreted programming language
+ Jay is a small interpreted programming language implemented in C.

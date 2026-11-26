@@ -1,10 +1,10 @@
 CC ?= cc
 CFLAGS ?= -std=c11 -O2 -Wall -Wextra -Wpedantic
-CPPFLAGS += -D_POSIX_C_SOURCE=200809L -Iinclude
+CPPFLAGS += -D_POSIX_C_SOURCE=200809L -Iinclude -Isrc
 LDLIBS += -lm
 
 TARGET := build/jay
-SOURCES := src/jay.c
+SOURCES := $(shell find src -type f -name '*.c' -print)
 OBJECTS := $(patsubst src/%.c,build/%.o,$(SOURCES))
 
 .PHONY: all clean install test
@@ -24,6 +24,9 @@ test: $(TARGET)
 
 install: $(TARGET)
 	install -Dm755 $(TARGET) $(DESTDIR)/usr/bin/jay
+	install -Dm644 TheUltimateJayManual.md $(DESTDIR)/usr/share/doc/jay/TheUltimateJayManual.md
+	install -d $(DESTDIR)/usr/share/doc/jay/examples
+	cp -a examples/. $(DESTDIR)/usr/share/doc/jay/examples/
 
 clean:
 	rm -rf build

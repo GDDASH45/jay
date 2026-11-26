@@ -1,6 +1,6 @@
 # Jay
 
-Jay is an interpreted programming language implemented in C.
+Jay is an interpreted programming language implemented in C and licensed under GPL-2.0.
 
 ## Build
 
@@ -12,24 +12,9 @@ The interpreter is created at `build/jay`.
 
 ## Run
 
-Run a source file:
+Run a source file with `jay examples/hello.jay`, or start the interactive shell with `jay`.
 
-```sh
-./build/jay examples/hello.jay
-```
-
-Start the interactive shell:
-
-```sh
-./build/jay
-```
-
-Print version or usage information:
-
-```sh
-./build/jay --version
-./build/jay --help
-```
+Print version or usage information with `jay --version` and `jay --help`.
 
 ## Language features
 
@@ -44,7 +29,6 @@ Print version or usage information:
 - `while` loops
 - `break` and `continue` inside loops
 - Comments beginning with `#`
-
 
 Run the test suite with `make test`.
 
