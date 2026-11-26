@@ -21,12 +21,19 @@ build/%.o: %.c
 
 test: $(TARGET)
 	@$(TARGET) --compile tests/stdlib.jay -o build/stdlib.jbc
-	@output=`$(TARGET) build/stdlib.jbc`; expected=`printf 'Jay stdlib\\nvalue: 7\\nJay\\n42'`; test "$output" = "$expected" || { echo 'Jay bytecode tests failed'; exit 1; }
-	@output=`JAY_MODULE_DIR=tests/modules $(TARGET) tests/umport.jay 2>build/umport.err`; status=$?; test "$output" = "73" && test "$status" -ne 0 && grep -q "undefined function 'module_value'" build/umport.err || { echo 'Jay umport tests failed'; cat build/umport.err; exit 1; }
-	@output=`JAY_MODULE_DIR=tests/modules $(TARGET) tests/import.jay`; expected=`printf 'module says:73'`; test "$output" = "$expected" || { echo 'Jay import tests failed'; exit 1; }
-	@output=`$(TARGET) tests/control_flow.jay`; expected=`printf '12\ncontrol flow: ok\nelse: ok'`; test "$$output" = "$$expected" || { echo 'Jay tests failed'; exit 1; }
-	@output=`$(TARGET) tests/stdlib.jay`; expected=`printf 'Jay stdlib\nvalue: 7\nJay\n42'`; test "$$output" = "$$expected" || { echo 'Jay standard-library tests failed'; exit 1; }
-
+	@$(TARGET) build/stdlib.jbc > build/bytecode.out
+	@printf 'Jay stdlib\nvalue: 7\nJay\n42' > build/bytecode.expected
+	@cmp -s build/bytecode.out build/bytecode.expected || { echo 'Jay bytecode tests failed'; exit 1; }
+	@if JAY_MODULE_DIR=tests/modules $(TARGET) tests/umport.jay > build/umport.out 2>build/umport.err; then echo 'Jay umport test unexpectedly succeeded'; exit 1; fi
+	@grep -qx '73' build/umport.out && grep -q "undefined function 'module_value'" build/umport.err || { echo 'Jay umport tests failed'; cat build/umport.err; exit 1; }
+	@JAY_MODULE_DIR=tests/modules $(TARGET) tests/import.jay > build/import.out
+	@printf 'module says:73' > build/import.expected
+	@cmp -s build/import.out build/import.expected || { echo 'Jay import tests failed'; exit 1; }
+	@$(TARGET) tests/control_flow.jay > build/control_flow.out
+	@printf '12\ncontrol flow: ok\nelse: ok' > build/control_flow.expected
+	@cmp -s build/control_flow.out build/control_flow.expected || { echo 'Jay tests failed'; exit 1; }
+	@$(TARGET) tests/stdlib.jay > build/stdlib.out
+	@cmp -s build/stdlib.out build/bytecode.expected || { echo 'Jay standard-library tests failed'; exit 1; }
 install: $(TARGET)
 	install -Dm755 $(TARGET) $(DESTDIR)/usr/bin/jay
 	install -Dm644 TheUltimateJayManual.md $(DESTDIR)/usr/share/doc/jay/TheUltimateJayManual.md
