@@ -29,7 +29,7 @@ volatile bool running = true
 volatile int hardware_status = 1
 ```
 
-In Jay 0.1.0, the interpreter evaluates variable reads directly from its variable table, so ordinary variables are not cached either. The qualifier is recorded by the interpreter, but hardware access, external mutation, memory barriers, and thread synchronization are not implemented.
+The interpreter evaluates variable reads directly from its variable table. The qualifier is recorded, but hardware access, external mutation, memory barriers, and thread synchronization are not implemented.
 
 `volatile` can be combined with built-in types:
 
@@ -57,9 +57,7 @@ let name = "Jay"
 
 ## Semicolons
 
-Semicolons are optional.
-
-Both styles are valid:
+Semicolons are optional. Both styles are valid:
 
 ```jay
 int x = 10
@@ -70,3 +68,46 @@ int y = 20
 int x = 10;
 int y = 20;
 ```
+
+## Conditions
+
+Use `if` and `else` to select a block. Conditions must evaluate to `bool`:
+
+```jay
+int age = 20
+if (age >= 18) {
+    print("Adult")
+} else {
+    print("Minor")
+}
+```
+
+## Loops
+
+A `while` loop repeats while its condition is `true`:
+
+```jay
+int count = 0
+while (count < 5) {
+    print(count)
+    count = count + 1
+}
+```
+
+Use `break` to leave the nearest loop and `continue` to skip to its next condition check:
+
+```jay
+int count = 0
+while (count < 10) {
+    count = count + 1
+    if (count == 3) {
+        continue
+    }
+    if (count == 7) {
+        break
+    }
+    print(count)
+}
+```
+
+`break` and `continue` are only valid inside a `while` loop. Jay 0.2.0 does not yet implement functions, arrays, or lexical block scopes.
