@@ -35,7 +35,7 @@ test: $(TARGET)
 	@$(TARGET) tests/stdlib.jay > build/stdlib.out
 	@cmp -s build/stdlib.out build/bytecode.expected || { echo 'Jay standard-library tests failed'; exit 1; }
 	@$(TARGET) tests/structs.jay > build/structs.out
-	@printf '3020origin7' > build/structs.expected
+	@printf '302520origin7' > build/structs.expected
 	@cmp -s build/structs.out build/structs.expected || { echo 'Jay struct/function tests failed'; exit 1; }
 install: $(TARGET)
 	install -Dm755 $(TARGET) $(DESTDIR)/usr/bin/jay
