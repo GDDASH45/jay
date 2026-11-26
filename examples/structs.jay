@@ -3,7 +3,7 @@ struct Point {
     int y
 }
 
-fn distance_squared(Point a, Point b): int {
+fn distance_squared(a, b): int {
     let dx = a.x - b.x
     let dy = a.y - b.y
     return dx * dx + dy * dy
