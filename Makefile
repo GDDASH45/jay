@@ -20,6 +20,9 @@ build/%.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 test: $(TARGET)
+	@mkdir -p build/test-modules
+	@printf 'fn module_value() { return 73 }\\n' > build/test-modules/math.jmd
+	@output=`JAY_MODULE_DIR=build/test-modules $(TARGET) tests/import.jay`; expected=`printf 'module says: 73'`; test "$output" = "$expected" || { echo 'Jay import tests failed'; exit 1; }
 	@output=`$(TARGET) tests/control_flow.jay`; expected=`printf '12\ncontrol flow: ok\nelse: ok'`; test "$$output" = "$$expected" || { echo 'Jay tests failed'; exit 1; }
 	@output=`$(TARGET) tests/stdlib.jay`; expected=`printf 'Jay stdlib\nvalue: 7\nJay\n42'`; test "$$output" = "$$expected" || { echo 'Jay standard-library tests failed'; exit 1; }
 
